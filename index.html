@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>3D Floating Photo Carousel</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:
+    radial-gradient(circle at center,#111,#000);
+    font-family:Arial,sans-serif;
+}
+
+/* TITLE */
+
+.title{
+
+    position:absolute;
+
+    top:30px;
+
+    width:100%;
+
+    text-align:center;
+
+    color:white;
+
+    z-index:100;
+
+    pointer-events:none;
+
+}
+
+.title h1{
+
+    font-size:clamp(35px,5vw,70px);
+
+    color:#fff;
+
+    text-shadow:
+        0 0 10px #ff66ff,
+        0 0 25px #ff66ff,
+        0 0 45px #ff66ff;
+
+}
+
+.title p{
+
+    margin-top:10px;
+
+    font-size:clamp(15px,2vw,24px);
+
+    color:#ddd;
+
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.4);
+
+}
+
+/* DRAG TEXT */
+
+.drag{
+
+    position:absolute;
+
+    bottom:30px;
+
+    width:100%;
+
+    text-align:center;
+
+    color:white;
+
+    font-size:18px;
+
+    z-index:100;
+
+    text-shadow:
+        0 0 10px #fff;
+
+    animation:blink 2s infinite;
+
+}
+
+@keyframes blink{
+
+    0%{opacity:1;}
+    50%{opacity:0.4;}
+    100%{opacity:1;}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="title">
+
+<h1>🎂 Happy Birthday Akka 💖</h1>
+
+<p>
+😅
+</p>
+
+</div>
+
+<div class="drag">
+✨
+</div>
+
+<!-- THREE JS -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+
+/////////////////////////////////////////
+// SCENE
+/////////////////////////////////////////
+
+const scene =
+new THREE.Scene();
+
+scene.fog =
+new THREE.Fog(0x000000,500,2000);
+
+/////////////////////////////////////////
+// CAMERA
+/////////////////////////////////////////
+
+const camera =
+new THREE.PerspectiveCamera(
+
+60,
+window.innerWidth/window.innerHeight,
+1,
+5000
+
+);
+
+camera.position.z = 900;
+
+/////////////////////////////////////////
+// RENDERER
+/////////////////////////////////////////
+
+const renderer =
+new THREE.WebGLRenderer({
+
+antialias:true
+
+});
+
+renderer.setSize(
+window.innerWidth,
+window.innerHeight
+);
+
+renderer.setPixelRatio(
+window.devicePixelRatio
+);
+
+document.body.appendChild(
+renderer.domElement
+);
+
+/////////////////////////////////////////
+// LIGHTS
+/////////////////////////////////////////
+
+const ambient =
+new THREE.AmbientLight(
+0xffffff,
+1
+);
+
+scene.add(ambient);
+
+const pointLight =
+new THREE.PointLight(
+0xff66ff,
+3
+);
+
+pointLight.position.set(
+0,
+200,
+300
+);
+
+scene.add(pointLight);
+
+/////////////////////////////////////////
+// STARS
+/////////////////////////////////////////
+
+const starsGeometry =
+new THREE.BufferGeometry();
+
+const starsVertices = [];
+
+for(let i=0;i<12000;i++){
+
+starsVertices.push(
+
+(Math.random()-0.5)*6000,
+(Math.random()-0.5)*6000,
+(Math.random()-0.5)*6000
+
+);
+
+}
+
+starsGeometry.setAttribute(
+
+'position',
+
+new THREE.Float32BufferAttribute(
+starsVertices,
+3
+)
+
+);
+
+const starsMaterial =
+new THREE.PointsMaterial({
+
+color:0xffffff,
+size:2
+
+});
+
+const stars =
+new THREE.Points(
+starsGeometry,
+starsMaterial
+);
+
+scene.add(stars);
+
+/////////////////////////////////////////
+// PHOTO GROUP
+/////////////////////////////////////////
+
+const gallery =
+new THREE.Group();
+
+scene.add(gallery);
+
+/////////////////////////////////////////
+// PHOTO TEXTURES
+/////////////////////////////////////////
+
+const loader =
+new THREE.TextureLoader();
+
+const images = [
+
+"akka1.jpeg",
+"akka2.jpeg",
+"akka3.jpeg",
+"akka4.jpeg",
+"akka5.jpeg",
+"akka6.jpeg",
+"akka7.jpeg",
+"akka8.jpeg"
+
+];
+
+/////////////////////////////////////////
+// CREATE PHOTO FRAMES
+/////////////////////////////////////////
+
+const radius = 450;
+
+images.forEach((img,index)=>{
+
+/////////////////////////////////////////
+// TEXTURE
+/////////////////////////////////////////
+
+const texture =
+loader.load(img);
+
+/////////////////////////////////////////
+// GLASS MATERIAL
+/////////////////////////////////////////
+
+const material =
+new THREE.MeshPhysicalMaterial({
+
+map:texture,
+
+roughness:0.15,
+
+metalness:0.2,
+
+transmission:0.15,
+
+thickness:0.5,
+
+clearcoat:1,
+
+clearcoatRoughness:0,
+
+reflectivity:1,
+
+side:THREE.DoubleSide
+
+});
+
+/////////////////////////////////////////
+// FRAME
+/////////////////////////////////////////
+
+const geometry =
+new THREE.PlaneGeometry(
+220,
+320
+);
+
+const frame =
+new THREE.Mesh(
+geometry,
+material
+);
+
+/////////////////////////////////////////
+// POSITION
+/////////////////////////////////////////
+
+const angle =
+(index/images.length)*
+Math.PI*2;
+
+frame.position.x =
+Math.cos(angle)*radius;
+
+frame.position.z =
+Math.sin(angle)*radius;
+
+frame.position.y =
+Math.sin(angle*2)*20;
+
+/////////////////////////////////////////
+// LOOK CENTER
+/////////////////////////////////////////
+
+frame.lookAt(0,0,0);
+
+/////////////////////////////////////////
+// NEON GLOW
+/////////////////////////////////////////
+
+const glowGeometry =
+new THREE.PlaneGeometry(
+235,
+335
+);
+
+const glowMaterial =
+new THREE.MeshBasicMaterial({
+
+color:0xff66ff,
+
+transparent:true,
+
+opacity:0.18
+
+});
+
+const glow =
+new THREE.Mesh(
+glowGeometry,
+glowMaterial
+);
+
+glow.position.z = -2;
+
+frame.add(glow);
+
+/////////////////////////////////////////
+// REFLECTION
+/////////////////////////////////////////
+
+const reflectionMaterial =
+new THREE.MeshBasicMaterial({
+
+map:texture,
+
+transparent:true,
+
+opacity:0.15,
+
+side:THREE.DoubleSide
+
+});
+
+const reflection =
+new THREE.Mesh(
+geometry,
+reflectionMaterial
+);
+
+reflection.rotation.x =
+Math.PI;
+
+reflection.position.y = -360;
+
+reflection.scale.y = -1;
+
+frame.add(reflection);
+
+gallery.add(frame);
+
+});
+
+/////////////////////////////////////////
+// FLOOR
+/////////////////////////////////////////
+
+const floorGeometry =
+new THREE.CircleGeometry(
+700,
+64
+);
+
+const floorMaterial =
+new THREE.MeshPhysicalMaterial({
+
+color:0x111111,
+
+roughness:0.2,
+
+metalness:1,
+
+reflectivity:1
+
+});
+
+const floor =
+new THREE.Mesh(
+floorGeometry,
+floorMaterial
+);
+
+floor.rotation.x =
+-Math.PI/2;
+
+floor.position.y = -220;
+
+scene.add(floor);
+
+/////////////////////////////////////////
+// MOUSE ROTATION
+/////////////////////////////////////////
+
+let isDragging = false;
+
+let previousMouseX = 0;
+
+document.addEventListener(
+"mousedown",
+(e)=>{
+
+isDragging = true;
+
+previousMouseX = e.clientX;
+
+}
+);
+
+document.addEventListener(
+"mouseup",
+()=>{
+
+isDragging = false;
+
+}
+);
+
+document.addEventListener(
+"mousemove",
+(e)=>{
+
+if(isDragging){
+
+const deltaX =
+e.clientX - previousMouseX;
+
+gallery.rotation.y +=
+deltaX*0.005;
+
+previousMouseX =
+e.clientX;
+
+}
+
+}
+);
+
+/////////////////////////////////////////
+// MOBILE TOUCH
+/////////////////////////////////////////
+
+document.addEventListener(
+"touchstart",
+(e)=>{
+
+previousMouseX =
+e.touches[0].clientX;
+
+}
+);
+
+document.addEventListener(
+"touchmove",
+(e)=>{
+
+const deltaX =
+e.touches[0].clientX -
+previousMouseX;
+
+gallery.rotation.y +=
+deltaX*0.005;
+
+previousMouseX =
+e.touches[0].clientX;
+
+}
+);
+
+/////////////////////////////////////////
+// ZOOM
+/////////////////////////////////////////
+
+window.addEventListener(
+"wheel",
+(e)=>{
+
+camera.position.z +=
+e.deltaY*0.3;
+
+camera.position.z =
+Math.max(
+400,
+Math.min(
+1400,
+camera.position.z
+)
+);
+
+}
+);
+
+/////////////////////////////////////////
+// ANIMATION
+/////////////////////////////////////////
+
+function animate(){
+
+requestAnimationFrame(
+animate
+);
+
+/////////////////////////////////////////
+// FLOATING EFFECT
+/////////////////////////////////////////
+
+gallery.rotation.y += 0.0015;
+
+gallery.position.y =
+Math.sin(Date.now()*0.001)
+*15;
+
+/////////////////////////////////////////
+// STARS ROTATION
+/////////////////////////////////////////
+
+stars.rotation.y += 0.0003;
+
+stars.rotation.x += 0.0001;
+
+/////////////////////////////////////////
+// CAMERA FLOAT
+/////////////////////////////////////////
+
+camera.position.y =
+Math.sin(Date.now()*0.0007)
+*20;
+
+camera.lookAt(0,0,0);
+
+renderer.render(
+scene,
+camera
+);
+
+}
+
+animate();
+
+/////////////////////////////////////////
+// RESIZE
+/////////////////////////////////////////
+
+window.addEventListener(
+"resize",
+()=>{
+
+camera.aspect =
+window.innerWidth/window.innerHeight;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(
+window.innerWidth,
+window.innerHeight
+);
+
+}
+);
+
+</script>
+
+</body>
+</html>
